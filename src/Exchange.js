@@ -1,4 +1,7 @@
 import ExchangeForm from "./ExchangeForm.js";
+import ExchangeIndacoinForm from "./ExchangeIndacoinForm.js";
+import ExchangeSellCashForm from "./ExchangeSellCashForm.js";
+import Select from "./Select.js";
 
 class Exchange extends HTMLElement {
 	constructor() {
@@ -94,6 +97,12 @@ class Exchange extends HTMLElement {
 
                 .exchange-bottom-row {
                     flex: auto;
+                    position: relative;
+                    z-index: 10;
+                }
+
+                .hide { 
+                    display: none;
                 }
             </style>
 
@@ -110,7 +119,7 @@ class Exchange extends HTMLElement {
                     </section>
 
                     <section class='exchange-bottom-row'>
-                        <bitcoinmat-exchange-form></bitcoinmat-exchange-form>
+                        <bitcoinmat-exchange-form text=${this.textColor}></bitcoinmat-exchange-form>
                     </section>
                 </div>
             </div>
@@ -122,12 +131,42 @@ class Exchange extends HTMLElement {
 			const previous = this.shadowRoot.querySelector(
 				".selected-transaction"
 			);
+			const bottomRow = this.shadowRoot.querySelector(
+				".exchange-bottom-row"
+			);
 
 			if (previous) {
 				previous.classList.remove("selected-transaction");
+
+				//Compare if its the same then do nothing
+				// console.log("previous", previous.innerText);
+				if (previous.innerText !== e.target.innerText) {
+					this._form = e.target.innerText;
+
+					if (this._form === "Convert") {
+						bottomRow.innerHTML = `<bitcoinmat-exchange-form text=${this.textColor}></bitcoinmat-exchange-form>`;
+					} else if (this._form === "Buy") {
+						bottomRow.innerHTML = `<bitcoinmat-exchange-indacoin-form></bitcoinmat-exchange-indacoin-form>`;
+					} else if (this._form === "Sell") {
+						bottomRow.innerHTML = `<bitcoinmat-exchange-sell-form></bitcoinmat-exchange-sell-form>`;
+					}
+				} else {
+					console.log("EQUEL");
+				}
+			} else {
+				this._form = e.target.innerText;
+
+				if (this._form === "Convert") {
+					bottomRow.innerHTML = `<bitcoinmat-exchange-form text=${this.textColor}></bitcoinmat-exchange-form>`;
+				} else if (this._form === "Buy") {
+					bottomRow.innerHTML = `<bitcoinmat-exchange-indacoin-form></bitcoinmat-exchange-indacoin-form>`;
+				} else if (this._form === "Sell") {
+					bottomRow.innerHTML = `<bitcoinmat-exchange-sell-form></bitcoinmat-exchange-sell-form>`;
+				}
 			}
 
-			console.log(e.target);
+			// console.log(e.target.innerText);
+
 			e.target.classList.add("selected-transaction");
 		};
 
@@ -143,3 +182,9 @@ class Exchange extends HTMLElement {
 
 customElements.define("bitcoinmat-exchange", Exchange);
 customElements.define("bitcoinmat-exchange-form", ExchangeForm);
+customElements.define(
+	"bitcoinmat-exchange-indacoin-form",
+	ExchangeIndacoinForm
+);
+customElements.define("bitcoinmat-exchange-sell-form", ExchangeSellCashForm);
+customElements.define("bitcoinmat-select", Select);
