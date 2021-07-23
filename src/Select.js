@@ -6,6 +6,8 @@ export default class Select extends HTMLElement {
 
 		const shadow = this.attachShadow({ mode: "open" });
 
+		let self = this;
+
 		const handleDropdownClick = () => {
 			const dropdownContent =
 				this.shadowRoot.querySelector(".dropdown-content");
@@ -105,23 +107,26 @@ export default class Select extends HTMLElement {
 
 		shadow.appendChild(template.content.cloneNode(true));
 
+		console.log(this);
+
 		const dropdownBtn = this.shadowRoot.querySelector(".dropdown-btn");
 		const dropdown = this.shadowRoot.querySelector(".dropdown");
-
-		// Alert if clicked on outside of element
-		const handleClickOutside = (e) => {
-			if (!e.composedPath().includes(this)) {
-				const dropdownContent =
-					this.shadowRoot.querySelector(".dropdown-content");
-
-				dropdownContent.classList.add("hide");
-			}
-		};
 
 		dropdownBtn.addEventListener("click", handleDropdownClick);
 
 		// Bind the event listener
-		document.addEventListener("click", handleClickOutside);
+		this.handleClickOutside = this.handleClickOutside.bind(this);
+		document.addEventListener("click", this.handleClickOutside);
+	}
+
+	// Alert if clicked on outside of element
+	handleClickOutside(e) {
+		if (!e.composedPath().includes(this)) {
+			const dropdownContent =
+				this.shadowRoot.querySelector(".dropdown-content");
+
+			dropdownContent.classList.add("hide");
+		}
 	}
 
 	set list(coinList) {
@@ -175,6 +180,6 @@ export default class Select extends HTMLElement {
 
 	disconnectedCallback() {
 		// Unbind the event listener on clean up
-		document.removeEventListener("click", handleClickOutside);
+		document.removeEventListener("click", this.handleClickOutside);
 	}
 }
