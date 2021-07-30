@@ -20,6 +20,7 @@ export default class Select extends HTMLElement {
 		};
 
 		this.list = this.getAttribute("list");
+		this.transactionType = this.getAttribute("transaction");
 
 		const template = document.createElement("template");
 		template.innerHTML = `
@@ -133,6 +134,28 @@ export default class Select extends HTMLElement {
 		if (coinList) {
 			this.coinList = coinList;
 
+			//Setup default selected
+			const defaultDropdownSelected =
+				this.shadowRoot.querySelector(".dropdown-selected");
+
+			const defaultImgSelected = document.createElement("img");
+			const defaultPselected = document.createElement("p");
+
+			defaultDropdownSelected.innerHTML = "";
+			defaultDropdownSelected.appendChild(defaultImgSelected);
+			defaultDropdownSelected.appendChild(defaultPselected);
+
+			this.#selected =
+				this.transactionType === "send" ? coinList[0] : coinList[1];
+
+			defaultImgSelected.src = this.#selected.image;
+			defaultPselected.textContent = this.#selected.ticker.toUpperCase();
+
+			this.dispatchEvent(
+				new CustomEvent("selected", { detail: this.#selected })
+			);
+
+			//Setup list
 			const dropdownContent =
 				this.shadowRoot.querySelector(".dropdown-content");
 			const ul = document.createElement("ul");

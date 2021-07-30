@@ -1,3 +1,5 @@
+import QRCode from "qrcode";
+
 export default class ExchangeForm extends HTMLElement {
 	constructor() {
 		super();
@@ -7,6 +9,9 @@ export default class ExchangeForm extends HTMLElement {
 		this.textColor = this.hasAttribute("text")
 			? this.getAttribute("text")
 			: "white";
+		this.backgroundColor = this.hasAttribute("bg")
+			? this.getAttribute("bg")
+			: "#1d1d1b";
 
 		const template = document.createElement("template");
 		template.innerHTML = `
@@ -113,12 +118,33 @@ export default class ExchangeForm extends HTMLElement {
                 .hide { 
                     display: none;
                 }
+
+                .success-info {
+                    background-color: ${this.backgroundColor};
+                    position: absolute;
+                    height: 88%;
+                    width: 84%;
+                    top: 0;
+                    left: 0;
+                    margin: 1.5rem;
+                }
+
+                .success-wallet-info {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                }
+
+                .payin-wallet {
+                    margin-bottom: 0.8rem;
+                    word-break: break-all;
+                }
             </style>
 
             <div class='exchange-form'>
                 <form>
                     <section id='send' class='exchange-form-group'>
-                        <bitcoinmat-select></bitcoinmat-select>
+                        <bitcoinmat-select transaction='send'></bitcoinmat-select>
 
                         <input placeholder="Send Amount">
                     </section>
@@ -134,23 +160,38 @@ export default class ExchangeForm extends HTMLElement {
                     </section>
 
                     <section id='receive' class='exchange-form-group'>
-                        <bitcoinmat-select></bitcoinmat-select>
+                        <bitcoinmat-select transaction='receive'></bitcoinmat-select>
 
                         <input placeholder="Receive Amount">
                     </section>
 
                     <section class='extra-inputs'>
-                        <input placeholder="Refund wallet">
+                        <input id='refund-wallet' placeholder="Refund wallet">
                     </section>
 
                     <section class='extra-inputs'>
-                        <input placeholder="Receive wallet">
+                        <input id='receive-wallet' placeholder="Receive wallet">
                     </section>
 
-                    <section class='message hide'>This is a message</section>
+                    <section id='main-message' class='message hide'>This is a message</section>
 
                     <button class='submit-btn'>Exchange</button>
                 </form>
+
+                <div class='success-info hide'>
+                    <section class='message'>
+                        Successfully created a transaction.
+                        </br>
+                        </br>
+                        Copy the wallet address bellow or scan the QR code to sent the requested amount of coins
+                    </section>
+
+                    <section class='success-wallet-info'>
+                        <p class='payin-wallet'>0x716F6dc79d4fe82C4E777B6b773c4Ee54A894B86</p>
+
+                        <img id='qrcode'>
+                    </section>
+                </div>
             </div>
         `;
 
@@ -167,15 +208,19 @@ export default class ExchangeForm extends HTMLElement {
 		//Inputs
 		const sendInput = this.shadowRoot.querySelector("#send input");
 		const receiveInput = this.shadowRoot.querySelector("#receive input");
-		const message = this.shadowRoot.querySelector(".message");
+		const submitBtn = this.shadowRoot.querySelector(".submit-btn");
+		const refundWallet = this.shadowRoot.querySelector("#refund-wallet");
+		const receiveWallet = this.shadowRoot.querySelector("#receive-wallet");
+		this.message = this.shadowRoot.querySelector("#main-message");
 
+		//On send input change
 		sendInput.addEventListener("input", async (e) => {
 			if (this._minimum) {
 				const value = e.target.value.replace(/[^0-9.]/g, "");
 
 				if (value > 0 && value > this._minimum) {
-					message.classList.add("hide");
-					message.classList.remove("error");
+					this.message.classList.add("hide");
+					this.message.classList.remove("error");
 
 					const res = await fetch(
 						"http://localhost:1337/user-transactions/changenow/estimate?" +
@@ -189,14 +234,77 @@ export default class ExchangeForm extends HTMLElement {
 
 					receiveInput.value = data.estimatedAmount.toFixed(8);
 				} else {
-					message.classList.add("error");
-					message.classList.remove("hide");
-					message.textContent = `Too low, minimum is ${this._minimum}`;
+					this.message.classList.add("error");
+					this.message.classList.remove("hide");
+					this.message.textContent = `Too low, minimum is ${this._minimum}`;
 
 					receiveInput.value = "";
 				}
 
 				e.target.value = value;
+			}
+		});
+
+		//On submit
+		submitBtn.addEventListener("click", async (e) => {
+			e.preventDefault();
+
+			if (
+				this._minimum &&
+				sendInput.value &&
+				refundWallet.value &&
+				receiveWallet.value &&
+				sendInput.value > this._minimum
+			) {
+				//Remove error message
+				this.message.classList.add("hide");
+				this.message.classList.remove("error");
+
+				//Make transaction
+				try {
+					const res = await fetch(
+						"http://localhost:1337/user-transactions/changenow/transaction?" +
+							new URLSearchParams({
+								from: this.sendSelected.ticker,
+								to: this.receiveSelected.ticker,
+								refundAddress: refundWallet.value,
+								address: receiveWallet.value,
+								amount: sendInput.value,
+							}),
+						{
+							method: "POST",
+						}
+					);
+
+					const data = await res.json();
+
+					if (!res.ok) {
+						throw new Error(data.message);
+					}
+
+					//Show success info
+					const successInfo =
+						this.shadowRoot.querySelector(".success-info");
+					const imgQrcode = this.shadowRoot.querySelector("#qrcode");
+
+					successInfo.classList.remove("hide");
+
+					const url = await this.generateQrcode(data.payinAddress);
+
+					imgQrcode.src = url;
+				} catch (err) {
+					//Add error message
+					this.message.classList.add("error");
+					this.message.classList.remove("hide");
+					this.message.textContent = err.message;
+				}
+			} else {
+				if (sendInput.value > this._minimum) {
+					//Add error message
+					this.message.classList.add("error");
+					this.message.classList.remove("hide");
+					this.message.textContent = "Please fill out all inputs";
+				}
 			}
 		});
 
@@ -227,21 +335,48 @@ export default class ExchangeForm extends HTMLElement {
 		this.receiveSelectDropdown.list = data;
 	}
 
+	async generateQrcode(text) {
+		try {
+			let url = await QRCode.toDataURL(text);
+
+			return url;
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
 	async fetchMinimum() {
 		if (this.sendSelected && this.receiveSelected) {
-			const res = await fetch(
-				"http://localhost:1337/user-transactions/changenow/minimum?" +
-					new URLSearchParams({
-						from: this.sendSelected.ticker,
-						to: this.receiveSelected.ticker,
-					})
-			);
+			try {
+				const res = await fetch(
+					"http://localhost:1337/user-transactions/changenow/minimum?" +
+						new URLSearchParams({
+							from: this.sendSelected.ticker,
+							to: this.receiveSelected.ticker,
+						})
+				);
 
-			const data = await res.json();
+				const data = await res.json();
 
-			this._minimum = data.minAmount;
+				if (!res.ok) {
+					throw new Error(data.message);
+				}
 
-			console.log("min", this._minimum);
+				//Remove error message
+				this.message.classList.add("hide");
+				this.message.classList.remove("error");
+
+				this._minimum = data.minAmount;
+
+				console.log("min", this._minimum);
+			} catch (err) {
+				//Add error message
+				this.message.classList.add("error");
+				this.message.classList.remove("hide");
+				this.message.textContent = err.message;
+
+				this._minimum = null;
+			}
 		}
 	}
 }

@@ -2,7 +2,6 @@ import ExchangeForm from "./ExchangeForm.js";
 import ExchangeIndacoinForm from "./ExchangeIndacoinForm.js";
 import ExchangeSellCashForm from "./ExchangeSellCashForm.js";
 import Select from "./Select.js";
-
 class Exchange extends HTMLElement {
 	constructor() {
 		super();
@@ -119,7 +118,7 @@ class Exchange extends HTMLElement {
                     </section>
 
                     <section class='exchange-bottom-row'>
-                        <bitcoinmat-exchange-form text=${this.textColor}></bitcoinmat-exchange-form>
+                        <bitcoinmat-exchange-form bg=${this.backgroundColor} text=${this.textColor}></bitcoinmat-exchange-form>
                     </section>
                 </div>
             </div>
@@ -138,8 +137,7 @@ class Exchange extends HTMLElement {
 			if (previous) {
 				previous.classList.remove("selected-transaction");
 
-				//Compare if its the same then do nothing
-				// console.log("previous", previous.innerText);
+				//Compare if its the same
 				if (previous.innerText !== e.target.innerText) {
 					this._form = e.target.innerText;
 
@@ -150,8 +148,6 @@ class Exchange extends HTMLElement {
 					} else if (this._form === "Sell") {
 						bottomRow.innerHTML = `<bitcoinmat-exchange-sell-form></bitcoinmat-exchange-sell-form>`;
 					}
-				} else {
-					console.log("EQUEL");
 				}
 			} else {
 				this._form = e.target.innerText;
@@ -164,8 +160,6 @@ class Exchange extends HTMLElement {
 					bottomRow.innerHTML = `<bitcoinmat-exchange-sell-form></bitcoinmat-exchange-sell-form>`;
 				}
 			}
-
-			// console.log(e.target.innerText);
 
 			e.target.classList.add("selected-transaction");
 		};
