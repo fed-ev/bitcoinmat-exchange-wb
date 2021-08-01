@@ -142,22 +142,22 @@ class Exchange extends HTMLElement {
 					this._form = e.target.innerText;
 
 					if (this._form === "Convert") {
-						bottomRow.innerHTML = `<bitcoinmat-exchange-form text=${this.textColor}></bitcoinmat-exchange-form>`;
+						bottomRow.innerHTML = `<bitcoinmat-exchange-form bg=${this.backgroundColor} text=${this.textColor}></bitcoinmat-exchange-form>`;
 					} else if (this._form === "Buy") {
 						bottomRow.innerHTML = `<bitcoinmat-exchange-indacoin-form></bitcoinmat-exchange-indacoin-form>`;
 					} else if (this._form === "Sell") {
-						bottomRow.innerHTML = `<bitcoinmat-exchange-sell-form></bitcoinmat-exchange-sell-form>`;
+						bottomRow.innerHTML = `<bitcoinmat-exchange-sell-form bg=${this.backgroundColor} text=${this.textColor}></bitcoinmat-exchange-sell-form>`;
 					}
 				}
 			} else {
 				this._form = e.target.innerText;
 
 				if (this._form === "Convert") {
-					bottomRow.innerHTML = `<bitcoinmat-exchange-form text=${this.textColor}></bitcoinmat-exchange-form>`;
+					bottomRow.innerHTML = `<bitcoinmat-exchange-form bg=${this.backgroundColor} text=${this.textColor}></bitcoinmat-exchange-form>`;
 				} else if (this._form === "Buy") {
 					bottomRow.innerHTML = `<bitcoinmat-exchange-indacoin-form></bitcoinmat-exchange-indacoin-form>`;
 				} else if (this._form === "Sell") {
-					bottomRow.innerHTML = `<bitcoinmat-exchange-sell-form></bitcoinmat-exchange-sell-form>`;
+					bottomRow.innerHTML = `<bitcoinmat-exchange-sell-form bg=${this.backgroundColor} text=${this.textColor}></bitcoinmat-exchange-sell-form>`;
 				}
 			}
 

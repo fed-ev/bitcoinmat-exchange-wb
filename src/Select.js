@@ -6,8 +6,6 @@ export default class Select extends HTMLElement {
 
 		const shadow = this.attachShadow({ mode: "open" });
 
-		let self = this;
-
 		const handleDropdownClick = () => {
 			const dropdownContent =
 				this.shadowRoot.querySelector(".dropdown-content");
@@ -21,6 +19,7 @@ export default class Select extends HTMLElement {
 
 		this.list = this.getAttribute("list");
 		this.transactionType = this.getAttribute("transaction");
+		this.type = this.getAttribute("type");
 
 		const template = document.createElement("template");
 		template.innerHTML = `
@@ -108,8 +107,6 @@ export default class Select extends HTMLElement {
 
 		shadow.appendChild(template.content.cloneNode(true));
 
-		console.log(this);
-
 		const dropdownBtn = this.shadowRoot.querySelector(".dropdown-btn");
 		const dropdown = this.shadowRoot.querySelector(".dropdown");
 
@@ -146,9 +143,12 @@ export default class Select extends HTMLElement {
 			defaultDropdownSelected.appendChild(defaultPselected);
 
 			this.#selected =
-				this.transactionType === "send" ? coinList[0] : coinList[1];
+				this.transactionType === "send" || this.type !== "convert"
+					? coinList[0]
+					: coinList[1];
 
 			defaultImgSelected.src = this.#selected.image;
+			defaultImgSelected.height = 24;
 			defaultPselected.textContent = this.#selected.ticker.toUpperCase();
 
 			this.dispatchEvent(
@@ -182,6 +182,7 @@ export default class Select extends HTMLElement {
 					dropdownSelected.appendChild(pSelected);
 
 					imgSelected.src = coin.image;
+					imgSelected.height = 24;
 					pSelected.textContent = coin.ticker.toUpperCase();
 
 					this.#selected = coin;
@@ -194,6 +195,7 @@ export default class Select extends HTMLElement {
 				});
 
 				img.src = coin.image;
+				img.height = 24;
 				p.textContent = coin.ticker.toUpperCase();
 			});
 

@@ -144,7 +144,7 @@ export default class ExchangeForm extends HTMLElement {
             <div class='exchange-form'>
                 <form>
                     <section id='send' class='exchange-form-group'>
-                        <bitcoinmat-select transaction='send'></bitcoinmat-select>
+                        <bitcoinmat-select type='convert' transaction='send'></bitcoinmat-select>
 
                         <input placeholder="Send Amount">
                     </section>
@@ -160,7 +160,7 @@ export default class ExchangeForm extends HTMLElement {
                     </section>
 
                     <section id='receive' class='exchange-form-group'>
-                        <bitcoinmat-select transaction='receive'></bitcoinmat-select>
+                        <bitcoinmat-select type='convert' transaction='receive'></bitcoinmat-select>
 
                         <input placeholder="Receive Amount">
                     </section>
