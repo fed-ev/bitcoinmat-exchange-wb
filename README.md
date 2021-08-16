@@ -1,10 +1,10 @@
-#Step to work on codebase:
+# Step to work on codebase:
 
 1. Clone project to your computer
 2. Use the command 'npm i' to install all dependencies
 3. Create a index.html in src folder that contains this
 
-'''js
+```html
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -18,7 +18,7 @@
 		></bitcoinmat-exchange>
 	</body>
 </html>
-'''
+```
 
 4. For development run the command 'npm run dev' and open a live server on the index.html
 5. To build run the command 'npm run build'
