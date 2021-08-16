@@ -20,6 +20,9 @@ export default class Select extends HTMLElement {
 		this.list = this.getAttribute("list");
 		this.transactionType = this.getAttribute("transaction");
 		this.type = this.getAttribute("type");
+		this.image = this.hasAttribute("image")
+			? this.getAttribute("image")
+			: "true";
 
 		const template = document.createElement("template");
 		template.innerHTML = `
@@ -132,23 +135,27 @@ export default class Select extends HTMLElement {
 			this.coinList = coinList;
 
 			//Setup default selected
-			const defaultDropdownSelected =
-				this.shadowRoot.querySelector(".dropdown-selected");
-
-			const defaultImgSelected = document.createElement("img");
-			const defaultPselected = document.createElement("p");
-
-			defaultDropdownSelected.innerHTML = "";
-			defaultDropdownSelected.appendChild(defaultImgSelected);
-			defaultDropdownSelected.appendChild(defaultPselected);
-
 			this.#selected =
 				this.transactionType === "send" || this.type !== "convert"
 					? coinList[0]
 					: coinList[1];
 
-			defaultImgSelected.src = this.#selected.image;
-			defaultImgSelected.height = 24;
+			const defaultDropdownSelected =
+				this.shadowRoot.querySelector(".dropdown-selected");
+
+			defaultDropdownSelected.innerHTML = "";
+			const defaultPselected = document.createElement("p");
+
+			if (this.image === "true") {
+				const defaultImgSelected = document.createElement("img");
+
+				defaultDropdownSelected.appendChild(defaultImgSelected);
+				defaultImgSelected.src = this.#selected.image;
+				defaultImgSelected.height = 24;
+			}
+
+			defaultDropdownSelected.appendChild(defaultPselected);
+
 			defaultPselected.textContent = this.#selected.ticker.toUpperCase();
 
 			this.dispatchEvent(
@@ -162,11 +169,20 @@ export default class Select extends HTMLElement {
 
 			coinList.forEach((coin) => {
 				const li = document.createElement("li");
-				const img = document.createElement("img");
 				const p = document.createElement("p");
+
+				if (this.image === "true") {
+					const img = document.createElement("img");
+
+					li.appendChild(img);
+					img.src = coin.image;
+					img.height = 24;
+				}
+
 				ul.appendChild(li);
-				li.appendChild(img);
 				li.appendChild(p);
+
+				p.textContent = coin.ticker.toUpperCase();
 
 				//TODO: Refactor this function maybe
 				li.addEventListener("click", (e) => {
@@ -174,15 +190,21 @@ export default class Select extends HTMLElement {
 						this.shadowRoot.querySelector(".dropdown-content");
 					const dropdownSelected =
 						this.shadowRoot.querySelector(".dropdown-selected");
-					const imgSelected = document.createElement("img");
-					const pSelected = document.createElement("p");
 
 					dropdownSelected.innerHTML = "";
-					dropdownSelected.appendChild(imgSelected);
+
+					if (this.image === "true") {
+						const imgSelected = document.createElement("img");
+
+						dropdownSelected.appendChild(imgSelected);
+						imgSelected.src = coin.image;
+						imgSelected.height = 24;
+					}
+
+					const pSelected = document.createElement("p");
+
 					dropdownSelected.appendChild(pSelected);
 
-					imgSelected.src = coin.image;
-					imgSelected.height = 24;
 					pSelected.textContent = coin.ticker.toUpperCase();
 
 					this.#selected = coin;
@@ -193,10 +215,6 @@ export default class Select extends HTMLElement {
 
 					dropdownContent.classList.add("hide");
 				});
-
-				img.src = coin.image;
-				img.height = 24;
-				p.textContent = coin.ticker.toUpperCase();
 			});
 
 			dropdownContent.appendChild(ul);

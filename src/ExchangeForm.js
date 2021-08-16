@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { io } from "socket.io-client";
 
 export default class ExchangeForm extends HTMLElement {
 	constructor() {
@@ -115,10 +116,6 @@ export default class ExchangeForm extends HTMLElement {
                     background-color: #b53636;
                 }
 
-                .hide { 
-                    display: none;
-                }
-
                 .success-info {
                     background-color: ${this.backgroundColor};
                     position: absolute;
@@ -129,16 +126,52 @@ export default class ExchangeForm extends HTMLElement {
                     margin: 1.5rem;
                 }
 
-                .success-wallet-info {
-                    display: flex;
-                    flex-direction: column;
+				.center-message {
+					display: flex;
+					flex-direction: column;
                     justify-content: center;
-                }
+					text-align: center;
+				}
 
                 .payin-wallet {
                     margin-bottom: 0.8rem;
                     word-break: break-all;
                 }
+
+				.margin {
+					margin-bottom: 2rem;
+				}
+
+				.loading {
+					display: flex;
+					justify-content: center;
+					align-items: center;
+				}
+				  
+				.loading::after {
+					content: '';
+					width: 50px;
+					height: 50px;
+					border: 5px solid #dddddd;
+					border-top-color: #da9723;
+					border-radius: 50%;
+					animation: loading 1s linear infinite;
+				}
+
+				#requested-amount {
+					font-weight: bold;
+					font-size: 1.2rem;
+				}
+
+				.hide { 
+                    display: none;
+                }
+
+				@keyframes loading {
+					to {
+					  transform: rotate(1turn);
+					}
+				  }
             </style>
 
             <div class='exchange-form'>
@@ -178,20 +211,30 @@ export default class ExchangeForm extends HTMLElement {
                     <button class='submit-btn'>Exchange</button>
                 </form>
 
-                <div class='success-info hide'>
+                <div id='success-waiting' class='success-info hide'>
                     <section class='message'>
                         Successfully created a transaction.
                         </br>
                         </br>
-                        Copy the wallet address bellow or scan the QR code to sent the requested amount of coins
+                        Copy the wallet address bellow or scan the QR code to sent the requested amount of coins <span id='requested-amount'></span>
                     </section>
 
-                    <section class='success-wallet-info'>
-                        <p class='payin-wallet'>0x716F6dc79d4fe82C4E777B6b773c4Ee54A894B86</p>
+                    <section class='center-message'>
+                        <p id='payin' class='payin-wallet'></p>
 
                         <img id='qrcode'>
                     </section>
                 </div>
+
+				<div id='success-confirming' class='success-info center-message hide'>
+					<div id='loading-status' class='loading margin'></div>
+					<img id='finish-status' class='margin hide' height='100' src='./assets/check-circle.svg'>
+
+					<section class='center-message'>
+						<h1>Confirming</h1>
+						<p>This may take several minutes</p>
+					</section>
+				</div>
             </div>
         `;
 
@@ -254,7 +297,7 @@ export default class ExchangeForm extends HTMLElement {
 				sendInput.value &&
 				refundWallet.value &&
 				receiveWallet.value &&
-				sendInput.value > this._minimum
+				sendInput.value >= this._minimum
 			) {
 				//Remove error message
 				this.message.classList.add("hide");
@@ -283,15 +326,57 @@ export default class ExchangeForm extends HTMLElement {
 					}
 
 					//Show success info
-					const successInfo =
-						this.shadowRoot.querySelector(".success-info");
+					const successInfoWaiting =
+						this.shadowRoot.querySelector("#success-waiting");
 					const imgQrcode = this.shadowRoot.querySelector("#qrcode");
+					const payin = this.shadowRoot.querySelector("#payin");
+					const requestedAmount =
+						this.shadowRoot.querySelector("#requested-amount");
 
-					successInfo.classList.remove("hide");
+					requestedAmount.innerText =
+						sendInput.value + " " + this.sendSelected.ticker;
+					payin.innerText = data.payinAddress;
+					successInfoWaiting.classList.remove("hide");
 
 					const url = await this.generateQrcode(data.payinAddress);
 
 					imgQrcode.src = url;
+
+					//Socket TEST
+					const socket = io("ws://localhost:1337");
+
+					socket.emit("checkTransaction", {
+						transactionId: data.id,
+						type: "changenow",
+					});
+
+					//Change to loading screen
+					const successConfirmation = this.shadowRoot.querySelector(
+						"#success-confirming"
+					);
+					const successStatus = this.shadowRoot.querySelector(
+						"#success-confirming h1"
+					);
+					const loadingStatus =
+						this.shadowRoot.querySelector("#loading-status");
+					const finishedStatus =
+						this.shadowRoot.querySelector("#finish-status");
+
+					socket.on("statusChange", (status) => {
+						if (successConfirmation.classList.contains("hide")) {
+							successConfirmation.classList.remove("hide");
+							successInfoWaiting.classList.add("hide");
+						}
+
+						if (status === "finished") {
+							loadingStatus.classList.add("hide");
+							finishedStatus.classList.remove("hide");
+						}
+
+						successStatus.innerText = status;
+					});
+
+					//TODO: If possible manually disconnect socket when finished
 				} catch (err) {
 					//Add error message
 					this.message.classList.add("error");

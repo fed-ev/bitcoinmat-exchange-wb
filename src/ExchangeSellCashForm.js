@@ -113,10 +113,6 @@ export default class ExchangeSellCashForm extends HTMLElement {
                     background-color: #b53636;
                 }
 
-                .hide { 
-                    display: none;
-                }
-
                 .success-info {
                     background-color: ${this.backgroundColor};
                     position: absolute;
@@ -125,6 +121,10 @@ export default class ExchangeSellCashForm extends HTMLElement {
                     top: 0;
                     left: 0;
                     margin: 1.5rem;
+                }
+
+				.hide { 
+                    display: none;
                 }
             </style>
 
@@ -217,7 +217,7 @@ export default class ExchangeSellCashForm extends HTMLElement {
 				emailInput.value &&
 				this._minimum &&
 				sendInput.value &&
-				receiveInput.value > this._minimum
+				receiveInput.value >= this._minimum
 			) {
 				//Remove error message
 				this.message.classList.add("hide");
@@ -226,7 +226,7 @@ export default class ExchangeSellCashForm extends HTMLElement {
 				//Make transaction
 				try {
 					const res = await fetch(
-						"https://dev.bitcoinmat.uk​/sellCryptoForCashAnon?" +
+						"http://localhost:1337​/sellCryptoForCashAnon?" +
 							new URLSearchParams({
 								fiatValue: receiveInput.value,
 								fiatCurrency: this.receiveSelected.ticker,
@@ -238,7 +238,9 @@ export default class ExchangeSellCashForm extends HTMLElement {
 					);
 
 					const data = await res.json();
-					console.log(res);
+
+					console.log("THIS WORKS", data);
+
 					if (!res.ok) {
 						let errMessage = JSON.parse(data.message.message);
 
