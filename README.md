@@ -1,7 +1,7 @@
 # Step to work on codebase:
 
 1. Clone project to your computer
-2. Use the command 'npm i' to install all dependencies
+2. Use the command `npm i` to install all dependencies
 3. Create a index.html in src folder that contains this
 
 ```html
@@ -20,6 +20,6 @@
 </html>
 ```
 
-4. For development run the command 'npm run dev' and open a live server on the index.html
+4. For development run the command `npm run dev` and open a live server on the index.html
 5. To build run the command 'npm run build'
-6. When project web component is completely finished create a cdn using jsdelivr for example pointing to the 'exchange.js' in the dist folder
+6. When project web component is completely finished create a cdn using jsdelivr for example pointing to the `exchange.js` in the dist folder
