@@ -22,4 +22,4 @@
 
 4. For development run the command `npm run dev` and open a live server on the index.html
 5. To build run the command 'npm run build'
-6. When project web component is completely finished create a cdn using jsdelivr for example pointing to the `exchange.js` in the dist folder
+6. When web component is completely finished create a cdn using jsdelivr for example pointing to the `exchange.js` in the dist folder
